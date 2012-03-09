@@ -18,26 +18,9 @@
  * @author Andres Almiray
  */
 
-eventPluginInstalled = { type, pluginName, pluginVersion, pluginInstallPath ->
-    includePluginScript('eclipse-support', 'EclipseUpdate')
-    try {
-        updateEclipseClasspathFile("${pluginName}-${pluginVersion}")
-    } catch(NullPointerException npe) {
-        // ignore
-    }
-}
-eventPluginUninstalled = { msg ->
-    includePluginScript('eclipse-support', 'EclipseUpdate')
-    try {
-        updateEclipseClasspathFile()
-    } catch(MissingMethodException mme) {
-        if(getPluginDirForName('eclipse-support')) {
-            throw mme
-        }
-    }
-}
-
-eventCreatedArtifact = { type, className ->
-    includePluginScript('eclipse-support', 'EclipseUpdate')
+includePluginScript('eclipse-support', 'EclipseUpdate')
+try {
     updateEclipseClasspathFile()
+} catch(NullPointerException npe) {
+    // ignore
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,10 @@
  * @author Andres Almiray
  */
 
-import griffon.util.PluginBuildSettings
 import static griffon.util.GriffonApplicationUtils.is64Bit
 import static griffon.util.GriffonApplicationUtils.isWindows
 
 import groovy.xml.MarkupBuilder
-
-includeTargets << griffonScript("Init")
-includeTargets << griffonScript("_PluginDependencies")
 
 target(updateEclipseClasspath: "Update the application's Eclipse classpath file") {
     updateEclipseClasspathFile()
@@ -35,13 +31,11 @@ setDefaultTarget('updateEclipseClasspath')
 updateEclipseClasspathFile = { newPlugin = null ->
     println "Updating Eclipse classpath file..."
 
-    if(newPlugin) event('SetClasspath', [classLoader])
-    griffonSettings.resetDependencies()
     def visitedDependencies = []
 
-    String userHomeRegex = isWindows ? userHome.toString().replace('\\', '\\\\') : userHome.toString()
-    String griffonHomeRegex = isWindows ? griffonHome.toString().replace('\\', '\\\\') : griffonHome.toString()
-    String baseDirPath = isWindows ? griffonSettings.baseDir.path.replace('\\', '\\\\') : griffonSettings.baseDir.path
+    String userHomeRegex    = isWindows ? userHome.toString().replace('\\', '\\\\')          : userHome.toString()
+    String griffonHomeRegex = isWindows ? griffonHome.toString().replace('\\', '\\\\')       : griffonHome.toString()
+    String baseDirPath      = isWindows ? griffonSettings.baseDir.path.replace('\\', '\\\\') : griffonSettings.baseDir.path
 
     String indent = '    '
     def writer = new PrintWriter(new FileWriter('.classpath'))
@@ -117,7 +111,7 @@ updateEclipseClasspathFile = { newPlugin = null ->
         mkp.yieldUnescaped("\n${indent}<!-- platform specific -->")
         visitPlatformDir(new File("${basedir}/lib"))
 
-        doWithPlugins{ pluginName, pluginVersion, pluginDir ->
+        pluginSettings.doWithPlugins{ pluginName, pluginVersion, pluginDir ->
             if("${pluginName}-${pluginVersion}" == newPlugin) return
             def libDir = new File(pluginDir, 'lib')
             visitPlatformDir(libDir)
