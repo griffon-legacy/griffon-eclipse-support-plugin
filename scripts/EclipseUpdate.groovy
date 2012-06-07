@@ -55,15 +55,18 @@ updateEclipseClasspathFile = { newPlugin = null ->
         }
         buildConfig.eclipse?.classpath?.include?.each { dir ->
             File target = new File(basedir, dir)
+            if(isWindows) dir = dir.replace('\\', '\\\\')
             if(target.exists()) classpathentry(kind: 'src', path: dir)
-        }        
+        }
 
         mkp.yieldUnescaped("\n${indent}<!-- output paths -->")
         classpathentry(kind: 'con', path: 'org.eclipse.jdt.launching.JRE_CONTAINER')
-        classpathentry(kind: 'output', path: classesDirPath.replaceFirst(~/$userHomeRegex/, 'USER_HOME'))
-        
+        classpathentry(kind: 'output', path: 'bin')
+        // classpathentry(kind: 'output', path: classesDirPath.replaceFirst(~/$userHomeRegex/, 'USER_HOME'))
+
         def normalizeFilePath = { file ->
-            String path = file.absolutePath
+            String path = file.canonicalPath
+            if(isWindows) path = path.replace('\\', '\\\\')
             String originalPath = path
             path = path.replaceFirst(~/$griffonHomeRegex/, 'GRIFFON_HOME')
             path = path.replaceFirst(~/$userHomeRegex/, 'USER_HOME')
@@ -78,10 +81,10 @@ updateEclipseClasspathFile = { newPlugin = null ->
                 if(visitedDependencies.contains(f)) return
                 visitedDependencies << f
                 Map pathEntry = normalizeFilePath(f)
-                classpathentry(kind: pathEntry.kind, path: pathEntry.path)   
-            }    
+                classpathentry(kind: pathEntry.kind, path: pathEntry.path)
+            }
         }
-               
+
         mkp.yieldUnescaped("\n${indent}<!-- runtime -->")
         visitDependencies(griffonSettings.runtimeDependencies)
         mkp.yieldUnescaped("\n${indent}<!-- test -->")
@@ -96,14 +99,14 @@ updateEclipseClasspathFile = { newPlugin = null ->
             if(nativeLibDir.exists()) {
                 nativeLibDir.eachFileMatch(~/.*\.jar/) { file ->
                     Map pathEntry = normalizeFilePath(file)
-                    classpathentry(kind: pathEntry.kind, path: pathEntry.path)   
+                    classpathentry(kind: pathEntry.kind, path: pathEntry.path)
                 }
             }
             nativeLibDir = new File("${libdir}/${platform[0..-3]}")
             if(is64Bit && nativeLibDir.exists()) {
                 nativeLibDir.eachFileMatch(~/.*\.jar/) { file ->
                     Map pathEntry = normalizeFilePath(file)
-                    classpathentry(kind: pathEntry.kind, path: pathEntry.path)   
+                    classpathentry(kind: pathEntry.kind, path: pathEntry.path)
                 }
             }
         }
@@ -111,7 +114,12 @@ updateEclipseClasspathFile = { newPlugin = null ->
         mkp.yieldUnescaped("\n${indent}<!-- platform specific -->")
         visitPlatformDir(new File("${basedir}/lib"))
 
-        pluginSettings.doWithPlugins{ pluginName, pluginVersion, pluginDir ->
+        pluginSettings.doWithProjectPlugins { pluginName, pluginVersion, pluginDir ->
+            if("${pluginName}-${pluginVersion}" == newPlugin) return
+            def libDir = new File(pluginDir, 'lib')
+            visitPlatformDir(libDir)
+        }
+        pluginSettings.doWithFrameworkPlugins { pluginName, pluginVersion, pluginDir ->
             if("${pluginName}-${pluginVersion}" == newPlugin) return
             def libDir = new File(pluginDir, 'lib')
             visitPlatformDir(libDir)

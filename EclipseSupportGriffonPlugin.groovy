@@ -19,9 +19,9 @@
  */
 class EclipseSupportGriffonPlugin {
     // the plugin version
-    String version = '0.5'
+    String version = '0.6'
     // the version or versions of Griffon the plugin is designed for
-    String griffonVersion = '0.9.5 > *'
+    String griffonVersion = '1.0.0 > *'
     // the other plugins this plugin depends on
     Map dependsOn = [:]
     // resources that are included in plugin packaging
@@ -39,6 +39,8 @@ class EclipseSupportGriffonPlugin {
     String documentation = ''
     // URL where source can be found
     String source = 'https://github.com/griffon/griffon-eclipse-support-plugin'
+    // Install as a framework plugin
+    boolean framework = true
 
     List authors = [
         [
