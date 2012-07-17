@@ -61,8 +61,8 @@ updateEclipseClasspathFile = { newPlugin = null ->
 
         mkp.yieldUnescaped("\n${indent}<!-- output paths -->")
         classpathentry(kind: 'con', path: 'org.eclipse.jdt.launching.JRE_CONTAINER')
+        classpathentry(exported: true, kind: 'con', path: 'GROOVY_DSL_SUPPORT')
         classpathentry(kind: 'output', path: 'bin')
-        // classpathentry(kind: 'output', path: classesDirPath.replaceFirst(~/$userHomeRegex/, 'USER_HOME'))
 
         def normalizeFilePath = { file ->
             String path = file.canonicalPath

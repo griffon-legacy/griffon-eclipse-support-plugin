@@ -19,7 +19,7 @@
  */
 class EclipseSupportGriffonPlugin {
     // the plugin version
-    String version = '0.6'
+    String version = '0.6.1'
     // the version or versions of Griffon the plugin is designed for
     String griffonVersion = '1.0.0 > *'
     // the other plugins this plugin depends on
