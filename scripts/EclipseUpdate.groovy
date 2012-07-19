@@ -28,14 +28,22 @@ target(updateEclipseClasspath: "Update the application's Eclipse classpath file"
 }
 setDefaultTarget('updateEclipseClasspath')
 
+normalizePath = { path ->
+    if (isWindows) {
+        path = path.replace('\\\\', '\\')
+        path = path.replace('\\', '\\\\')
+    }
+    path
+}
+
 updateEclipseClasspathFile = { newPlugin = null ->
     println "Updating Eclipse classpath file..."
 
     def visitedDependencies = []
 
-    String userHomeRegex    = isWindows ? userHome.toString().replace('\\', '\\\\')          : userHome.toString()
-    String griffonHomeRegex = isWindows ? griffonHome.toString().replace('\\', '\\\\')       : griffonHome.toString()
-    String baseDirPath      = isWindows ? griffonSettings.baseDir.path.replace('\\', '\\\\') : griffonSettings.baseDir.path
+    String userHomeRegex    = normalizePath(userHome.toString())
+    String griffonHomeRegex = normalizePath(griffonHome.toString())
+    String baseDirPath      = normalizePath(griffonSettings.baseDir.path)
 
     String indent = '    '
     def writer = new PrintWriter(new FileWriter('.classpath'))
@@ -55,7 +63,7 @@ updateEclipseClasspathFile = { newPlugin = null ->
         }
         buildConfig.eclipse?.classpath?.include?.each { dir ->
             File target = new File(basedir, dir)
-            if(isWindows) dir = dir.replace('\\', '\\\\')
+            dir = normalizePath(dir)
             if(target.exists()) classpathentry(kind: 'src', path: dir)
         }
 
@@ -66,17 +74,17 @@ updateEclipseClasspathFile = { newPlugin = null ->
 
         def normalizeFilePath = { file ->
             String path = file.canonicalPath
-            if(isWindows) path = path.replace('\\', '\\\\')
             String originalPath = path
             path = path.replaceFirst(~/$griffonHomeRegex/, 'GRIFFON_HOME')
             path = path.replaceFirst(~/$userHomeRegex/, 'USER_HOME')
-            boolean var = path != originalPath
+            path = normalizePath(path)
+            boolean var = path.startsWith('USER_HOME') || path.startsWith('GRIFFON_HOME')
             originalPath = path
             path = path.replaceFirst(~/${baseDirPath}(\\|\/)/, '')
             var = path == originalPath && !path.startsWith(File.separator)
             [kind: var? 'var' : 'lib', path: path]
         }
-        def visitDependencies = {List dependencies ->
+        def visitDependencies = { List dependencies ->
             dependencies.each { File f ->
                 if(visitedDependencies.contains(f)) return
                 visitedDependencies << f
@@ -94,7 +102,7 @@ updateEclipseClasspathFile = { newPlugin = null ->
         mkp.yieldUnescaped("\n${indent}<!-- build -->")
         visitDependencies(griffonSettings.buildDependencies)
         
-        def visitPlatformDir = {libdir ->
+        def visitPlatformDir = { libdir ->
             def nativeLibDir = new File("${libdir}/${platform}")
             if(nativeLibDir.exists()) {
                 nativeLibDir.eachFileMatch(~/.*\.jar/) { file ->
