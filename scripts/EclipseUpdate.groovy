@@ -18,6 +18,7 @@
  * @author Andres Almiray
  */
 
+import org.codehaus.griffon.artifacts.model.Plugin
 import static griffon.util.GriffonApplicationUtils.is64Bit
 import static griffon.util.GriffonApplicationUtils.isWindows
 
@@ -46,7 +47,7 @@ updateEclipseClasspathFile = { newPlugin = null ->
     String baseDirPath      = normalizePath(griffonSettings.baseDir.path)
 
     String indent = '    '
-    def writer = new PrintWriter(new FileWriter('.classpath'))
+    def writer = new PrintWriter(new FileWriter("${baseDirPath}/.classpath"))
     def xml = new MarkupBuilder(new IndentPrinter(writer, indent))
     xml.setDoubleQuotes(true)
     xml.mkp.xmlDeclaration(version: '1.0', encoding: 'UTF-8')
@@ -55,14 +56,14 @@ updateEclipseClasspathFile = { newPlugin = null ->
     xml.classpath {
         mkp.yieldUnescaped("\n${indent}<!-- source paths -->")
         ['griffon-app', 'src', 'test'].each { base ->
-            new File(base).eachDir { dir ->
+            new File(baseDirPath, base).eachDir { dir ->
                 if (! (dir.name =~ /^\..+/) && dir.name != 'templates') {
                     classpathentry(kind: 'src', path: "${base}/${dir.name}")
                 }
             }
         }
         buildConfig.eclipse?.classpath?.include?.each { dir ->
-            File target = new File(basedir, dir)
+            File target = new File(baseDirPath, dir)
             dir = normalizePath(dir)
             if(target.exists()) classpathentry(kind: 'src', path: dir)
         }
@@ -120,7 +121,7 @@ updateEclipseClasspathFile = { newPlugin = null ->
         }
 
         mkp.yieldUnescaped("\n${indent}<!-- platform specific -->")
-        visitPlatformDir(new File("${basedir}/lib"))
+        visitPlatformDir(new File("${baseDirPath}/lib"))
 
         pluginSettings.doWithProjectPlugins { pluginName, pluginVersion, pluginDir ->
             if("${pluginName}-${pluginVersion}" == newPlugin) return
@@ -133,7 +134,7 @@ updateEclipseClasspathFile = { newPlugin = null ->
             visitPlatformDir(libDir)
         }
         if(newPlugin) {
-            def libDir = new File([pluginsHome, newPlugin, 'lib'].join(File.separator))
+            def libDir = new File([artifactSettings.artifactBase(Plugin.TYPE), newPlugin, 'lib'].join(File.separator))
             visitPlatformDir(libDir)
         }
     }
