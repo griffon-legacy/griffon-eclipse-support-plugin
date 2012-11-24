@@ -90,7 +90,22 @@ updateEclipseClasspathFile = { newPlugin = null ->
                 if(visitedDependencies.contains(f)) return
                 visitedDependencies << f
                 Map pathEntry = normalizeFilePath(f)
-                classpathentry(kind: pathEntry.kind, path: pathEntry.path)
+                if (pathEntry.path.contains('griffon-rt')) {
+                    classpathentry(kind: pathEntry.kind, path: pathEntry.path,
+                                   sourcepath: pathEntry.path
+                                                        .replace('dist', 'doc')
+                                                        .replace('-rt', '')
+                                                        .replace('.jar', '-sources.jar')) {
+                        attributes {
+                            attribute(name: 'javadoc_location', value: 'http://griffon.codehaus.org/guide/latest/api/')
+                        }
+                    }
+                } else if (pathEntry.path =~ /.*griffon-.*-runtime.*/) {
+                    classpathentry(kind: pathEntry.kind, path: pathEntry.path,
+                                   sourcepath: pathEntry.path.replace('-runtime', '').replace('.jar', '-sources.jar'))
+                } else {
+                    classpathentry(kind: pathEntry.kind, path: pathEntry.path)
+                }
             }
         }
 
@@ -102,7 +117,7 @@ updateEclipseClasspathFile = { newPlugin = null ->
         visitDependencies(griffonSettings.compileDependencies)
         mkp.yieldUnescaped("\n${indent}<!-- build -->")
         visitDependencies(griffonSettings.buildDependencies)
-        
+
         def visitPlatformDir = { libdir ->
             def nativeLibDir = new File("${libdir}/${platform}")
             if(nativeLibDir.exists()) {
