@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -87,22 +87,20 @@ updateEclipseClasspathFile = { newPlugin = null ->
         }
         def visitDependencies = { List dependencies ->
             dependencies.each { File f ->
+println f.absolutePath
                 if(visitedDependencies.contains(f)) return
                 visitedDependencies << f
                 Map pathEntry = normalizeFilePath(f)
                 if (pathEntry.path.contains('griffon-rt')) {
                     classpathentry(kind: pathEntry.kind, path: pathEntry.path,
-                                   sourcepath: pathEntry.path
-                                                        .replace('dist', 'doc')
-                                                        .replace('-rt', '')
-                                                        .replace('.jar', '-sources.jar')) {
+                                   sourcepath: 'GRIFFON_HOME/doc/' + f.name.replace('.jar', '-sources.jar')) {
                         attributes {
                             attribute(name: 'javadoc_location', value: 'http://griffon.codehaus.org/guide/latest/api/')
                         }
                     }
-                } else if (pathEntry.path =~ /.*griffon-.*-runtime.*/) {
+                } else if (pathEntry.path.contains('griffon-cli')) {
                     classpathentry(kind: pathEntry.kind, path: pathEntry.path,
-                                   sourcepath: pathEntry.path.replace('-runtime', '').replace('.jar', '-sources.jar'))
+                                   sourcepath: 'GRIFFON_HOME/doc/' + f.name.replace('.jar', '-sources.jar'))
                 } else {
                     classpathentry(kind: pathEntry.kind, path: pathEntry.path)
                 }

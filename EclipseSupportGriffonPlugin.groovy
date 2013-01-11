@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@
  */
 class EclipseSupportGriffonPlugin {
     // the plugin version
-    String version = '0.6.3'
+    String version = '0.7'
     // the version or versions of Griffon the plugin is designed for
-    String griffonVersion = '1.0.0 > *'
+    String griffonVersion = '1.2.0 > *'
     // the other plugins this plugin depends on
     Map dependsOn = [:]
     // resources that are included in plugin packaging
