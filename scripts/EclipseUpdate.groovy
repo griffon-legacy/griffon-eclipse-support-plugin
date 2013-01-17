@@ -85,9 +85,14 @@ updateEclipseClasspathFile = { newPlugin = null ->
             var = path == originalPath && !path.startsWith(File.separator)
             [kind: var? 'var' : 'lib', path: path]
         }
+
+        def extractPluginName = { str, qualifier ->
+            def m = str =~ /griffon-(.+)-${qualifier}-.*/
+            m[0][1]
+        }
+
         def visitDependencies = { List dependencies ->
             dependencies.each { File f ->
-println f.absolutePath
                 if(visitedDependencies.contains(f)) return
                 visitedDependencies << f
                 Map pathEntry = normalizeFilePath(f)
@@ -101,6 +106,25 @@ println f.absolutePath
                 } else if (pathEntry.path.contains('griffon-cli')) {
                     classpathentry(kind: pathEntry.kind, path: pathEntry.path,
                                    sourcepath: 'GRIFFON_HOME/doc/' + f.name.replace('.jar', '-sources.jar'))
+                } else if (f.name.startsWith('griffon-')) {
+                    if (f.name.contains('-runtime-') || f.name.contains('-compile-')) {
+                       String qualifier = f.name.contains('runtime') ? 'runtime' : 'compile'
+                       String pluginName = extractPluginName(f.name, qualifier)
+                       def pluginEntry = pluginSettings.projectPlugins.find { it.key == pluginName }
+                       if (pluginEntry) {
+                            File sourceFile = new File("${pluginEntry.value.directory.file}/docs/${f.name.replace('.jar', '-sources.jar')}")
+                            if (sourceFile.exists()) {
+                                classpathentry(kind: pathEntry.kind, path: pathEntry.path,
+                                              sourcepath: normalizeFilePath(sourceFile).path)
+                            } else {
+                                classpathentry(kind: pathEntry.kind, path: pathEntry.path)
+                            }
+                        } else {
+                            classpathentry(kind: pathEntry.kind, path: pathEntry.path)
+                        }
+                    } else {
+                        classpathentry(kind: pathEntry.kind, path: pathEntry.path)
+                    }
                 } else {
                     classpathentry(kind: pathEntry.kind, path: pathEntry.path)
                 }
