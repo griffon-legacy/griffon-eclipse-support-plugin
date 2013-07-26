@@ -71,17 +71,18 @@ updateEclipseClasspathFile = { newPlugin = null ->
         mkp.yieldUnescaped("\n${indent}<!-- output paths -->")
         classpathentry(kind: 'con', path: 'org.eclipse.jdt.launching.JRE_CONTAINER')
         classpathentry(exported: true, kind: 'con', path: 'GROOVY_DSL_SUPPORT')
-        classpathentry(kind: 'output', path: 'bin')
+        classpathentry(kind: 'output', path: "USER_HOME${classesDirPath.substring(userHomeRegex.size())}")
 
         def normalizeFilePath = { file ->
             String path = file.canonicalPath
             String originalPath = path
-            path = path.replaceFirst(~/$griffonHomeRegex/, 'GRIFFON_HOME')
-            path = path.replaceFirst(~/$userHomeRegex/, 'USER_HOME')
+            if (path.startsWith(griffonHomeRegex)) path = 'GRIFFON_HOME' + path.substring(griffonHomeRegex.size())
+            if (path.startsWith(userHomeRegex)) path = 'USER_HOME' + path.substring(userHomeRegex.size())
             path = normalizePath(path)
             boolean var = path.startsWith('USER_HOME') || path.startsWith('GRIFFON_HOME')
             originalPath = path
-            path = path.replaceFirst(~/${baseDirPath}(\\|\/)/, '')
+            if (path.startsWith(baseDirPath + '/')) path = path.substring(baseDirPath.size() + 1)
+            if (isWindows && path.startsWith(baseDirPath + '\\')) path = path.substring((baseDirPath + '\\').size())
             var = path == originalPath && !path.startsWith(File.separator)
             [kind: var? 'var' : 'lib', path: path]
         }
